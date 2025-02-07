@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "src/ord-canister-backend"
+]
+resolver = "2"

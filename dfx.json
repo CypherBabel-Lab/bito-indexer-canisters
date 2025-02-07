@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "ord-canister-backend": {
+      "candid": "src/ord-canister-backend/ord-canister-backend.did",
+      "package": "ord-canister-backend",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
