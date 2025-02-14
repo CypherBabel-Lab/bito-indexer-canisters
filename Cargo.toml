@@ -1,5 +1,21 @@
 [workspace]
 members = [
-    "src/ord-canister-backend"
+    "src/indexer",
+    "src/bitcoin-rpc-proxy",
+    "src/logs",
 ]
 resolver = "2"
+
+[workspace.dependencies]
+candid = "0.10.10"
+ic-cdk = "0.16.0"
+ic-canister-log = "0.2.0"
+ic-cdk-timers = "0.10.0" # Feel free to remove this dependency if you don't need timers
+
+ic-canisters-http-types = { git = "https://github.com/dfinity/ic.git", package = "ic-canisters-http-types", rev = "3d6a76e" }
+
+proptest = "1.0"
+
+serde = { version = "1.0.203", features = ["derive"] }
+serde_bytes = "0.11.14"
+serde_json = { version = "1.0.117", features = ["std"] }
