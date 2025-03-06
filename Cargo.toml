@@ -3,6 +3,7 @@ members = [
     "src/indexer",
     "src/bitcoin-rpc-proxy",
     "src/logs",
+    "src/interface",
 ]
 resolver = "2"
 

@@ -3,20 +3,29 @@ use std::cell::RefCell;
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::DefaultMemoryImpl;
 
-pub const STATE_MEMORY_ID: MemoryId = MemoryId::new(0);
-pub const NONCE_MANAGER_MEMORY_ID: MemoryId = MemoryId::new(1);
-pub const CREATED_HISTORIES_ID: MemoryId = MemoryId::new(2);
-pub const PENDING_BITCOIN_HISTORIES_ID: MemoryId = MemoryId::new(3);
-pub const PENDING_HISTORIES_ID: MemoryId = MemoryId::new(4);
-pub const HISTORIES_ID: MemoryId = MemoryId::new(5);
-pub const CACHED_EVENT_TEMP_MEMORY_ID: MemoryId = MemoryId::new(6);
-
-pub const FEE_COLLECTOR_ID: MemoryId = MemoryId::new(7);
-
-pub const HISTORY_INDEX_BITCOIN_ID: MemoryId = MemoryId::new(8);
-pub const HISTORY_INDEX_EVM_ID: MemoryId = MemoryId::new(9);
-pub const HISTORY_INDEX_ICP_ID: MemoryId = MemoryId::new(10);
-pub const HISTORY_INDEX_SUI_ID: MemoryId = MemoryId::new(11);
+pub const CONFIG_MEMORY_ID: MemoryId = MemoryId::new(0);
+pub const HEIGHT_TO_BLOCK_HEADER_MEMORY_ID: MemoryId = MemoryId::new(1);
+pub const HEIGHT_TO_LAST_SEQUENCE_NUMBER_MEMORY_ID: MemoryId = MemoryId::new(2);
+pub const HOME_INSCRIPTIONS_MEMORY_ID: MemoryId = MemoryId::new(3);
+pub const INSCRIPTION_ID_TO_SEQUENCE_NUMBER_MEMORY_ID: MemoryId = MemoryId::new(4);
+pub const INSCRIPTION_NUMBER_TO_SEQUENCE_NUMBER_MEMORY_ID: MemoryId = MemoryId::new(5);
+pub const OUTPOINT_TO_RUNE_BALANCES_MEMORY_ID: MemoryId = MemoryId::new(6);
+pub const OUTPOINT_TO_UTXO_ENTRY_MEMORY_ID: MemoryId = MemoryId::new(7);
+pub const RUNE_ID_TO_RUNE_ENTRY_MEMORY_ID: MemoryId = MemoryId::new(8);
+pub const RUNE_TO_RUNE_ID_MEMORY_ID: MemoryId = MemoryId::new(9);
+pub const SAT_TO_SATPOINT_MEMORY_ID: MemoryId = MemoryId::new(10);
+pub const SEQUENCE_NUMBER_TO_INSCRIPTION_ENTRY_MEMORY_ID: MemoryId = MemoryId::new(11);
+pub const SEQUENCE_NUMBER_TO_RUNE_ID_MEMORY_ID: MemoryId = MemoryId::new(12);
+pub const SEQUENCE_NUMBER_TO_SATPOINT_MEMORY_ID: MemoryId = MemoryId::new(13);
+pub const STATISTIC_TO_COUNT_MEMORY_ID: MemoryId = MemoryId::new(14);
+pub const TRANSACTION_ID_TO_RUNE_ID_MEMORY_ID: MemoryId = MemoryId::new(15);
+pub const TRANSACTION_ID_TO_TRANSACTION_MEMORY_ID: MemoryId = MemoryId::new(16);
+pub const WRITE_TRANSACTION_STARTING_BLOCK_COUNT_TO_TIMESTAMP_MEMORY_ID: MemoryId = MemoryId::new(17);
+pub const HEIGHT_TO_EVENTS_MEMORY_ID: MemoryId = MemoryId::new(18);
+// multimap memories
+pub const SAT_TO_SEQUENCE_NUMBERS_MEMORY_ID: MemoryId = MemoryId::new(19);
+pub const SEQUENCE_NUMBER_TO_CHILDRENS_MEMORY_ID: MemoryId = MemoryId::new(20);
+pub const SCRIPT_PUBKEY_TO_OUTPOINTS_MEMORY_ID: MemoryId = MemoryId::new(21);
 
 pub type VMemory = VirtualMemory<DefaultMemoryImpl>;
 

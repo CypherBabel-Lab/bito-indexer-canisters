@@ -1,4 +1,3 @@
-use std::f32::consts::E;
 
 use super::Result;
 use logs::{DEBUG, ERROR};
@@ -221,7 +220,14 @@ where
     endpoint,
     total_cycles
   );
-  let reply: Reply<R> = serde_json::from_slice(&buf)?;
+  let reply: Reply<R> = match serde_json::from_slice(&buf) {
+    Ok(reply) => reply,
+    Err(e) => {
+      return Err(anyhow!("rpc json parse error: {:?} => {}, origin msg: {}", endpoint, e, String::from_utf8_lossy(&buf)));
+    }
+      
+  };
+  // let reply: Reply<R> = serde_json::from_slice(&buf)?;
   if reply.error.is_some() {
     return Err(anyhow!(
       "rpc error: {:?} => {}",
@@ -252,6 +258,26 @@ async fn inner_get_block(
   Ok(encode::deserialize_hex(&hex)?)
 }
 
+pub(crate) async fn get_block(hash: BlockHash) -> Result<crate::index::updater::BlockData> {
+  let config = crate::index::mem_get_config();
+  let block = inner_get_block(
+    &config.bitcoin_rpc_url,
+    MAX_RESPONSE_BYTES,
+    config.get_subnet_nodes(),
+    hash,
+  )
+  .await?;
+
+  if block.block_hash() != hash {
+    return Err(anyhow!("wrong block hash: {}", hash.to_string()));
+  }
+
+  block
+    .check_merkle_root()
+    .then(|| crate::index::updater::BlockData::from(block))
+    .ok_or(anyhow!("wrong block merkle root: {}", hash.to_string()))
+}
+
 async fn inner_get_raw_transaction_info(
   url: &str,
   max_response_bytes: u64,
@@ -275,6 +301,22 @@ async fn inner_get_raw_transaction_info(
   Ok(res)
 }
 
+// 1885 ~ 3522 bytes
+pub(crate) async fn get_raw_transaction_info(
+  txid: &Txid,
+  block_hash: Option<&BlockHash>,
+) -> Result<GetRawTransactionResult> {
+  let config = crate::index::mem_get_config();
+  inner_get_raw_transaction_info(
+    &config.bitcoin_rpc_url,
+    4_096,
+    config.get_subnet_nodes(),
+    txid,
+    block_hash,
+  )
+  .await
+}
+
 async fn inner_get_block_header_info(
   url: &str,
   max_response_bytes: u64,
@@ -291,6 +333,20 @@ async fn inner_get_block_header_info(
   )
   .await?;
   Ok(res)
+}
+
+// 640 ~ 644 bytes
+pub(crate) async fn get_block_header_info(
+  hash: &bitcoin::BlockHash,
+) -> Result<GetBlockHeaderResult> {
+  let config = crate::index::mem_get_config();
+  inner_get_block_header_info(
+    &config.bitcoin_rpc_url,
+    1_024,
+    config.get_subnet_nodes(),
+    hash,
+  )
+  .await
 }
 
 async fn inner_get_block_hash(
@@ -312,7 +368,14 @@ async fn inner_get_block_hash(
 }
 
 pub(crate) async fn get_block_hash(height: u32) -> Result<BlockHash> {
-  Err(anyhow!("get_block_hash is not implemented"))
+  let config = crate::index::mem_get_config();
+  inner_get_block_hash(
+    &config.bitcoin_rpc_url,
+    256,
+    config.get_subnet_nodes(),
+    height,
+  )
+  .await
 }
 
 /// Shorthand for converting a variable into a serde_json::Value.

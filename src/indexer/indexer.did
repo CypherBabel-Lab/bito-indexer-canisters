@@ -1,0 +1,59 @@
+type BitcoinNetwork = variant { mainnet; regtest; testnet };
+type Config = record {
+  bitcoin_rpc_url : text;
+  index_inscriptions : opt bool;
+  index_sats : opt bool;
+  index_addresses : opt bool;
+  index_transactions : opt bool;
+  network : BitcoinNetwork;
+  subscribers : vec principal;
+  index_runes : opt bool;
+};
+type InitIndexerArgs = variant { Upgrade : opt UpgradeArgs; Init : Config };
+type Inscription = record {
+  id : text;
+  fee : nat64;
+  sat : opt nat64;
+  height : nat32;
+  child_count : nat64;
+  previous : opt text;
+  value : opt nat64;
+  next : opt text;
+  rune : opt text;
+  content_type : opt text;
+  effective_content_type : opt text;
+  children : vec text;
+  satpoint : text;
+  address : opt text;
+  number : int32;
+  timestamp : int64;
+  content_length : opt nat64;
+  charms : vec text;
+  parents : vec text;
+  metaprotocol : opt text;
+};
+type InscriptionEntry = record {
+  id : text;
+  fee : nat64;
+  sat : nat64;
+  height : nat32;
+  sequence_number : nat32;
+  inscription_number : int32;
+  timestamp : nat32;
+  charms : nat16;
+  parents : vec nat32;
+};
+type InscriptionQuery = variant { Id : text; Sat : text; Number : int32 };
+type Result = variant { Ok : opt InscriptionEntry; Err : text };
+type Result_1 = variant { Ok : opt Inscription; Err : text };
+type Result_2 = variant { Ok : vec text; Err : text };
+type UpgradeArgs = record {
+  bitcoin_rpc_url : opt text;
+  subscribers : opt vec principal;
+};
+service : (InitIndexerArgs) -> {
+  get_inscription_entry : (text) -> (Result) query;
+  get_inscription_info : (InscriptionQuery, opt nat64) -> (Result_1);
+  get_inscriptions_in_block : (nat32) -> (Result_2) query;
+  get_latest_block : () -> (nat32, text) query;
+}

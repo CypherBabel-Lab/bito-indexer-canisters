@@ -135,9 +135,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
         let rsp = forward(&target, user.clone(), req).await;
         let Ok(ref response) = rsp;
-          if let Some(key) = key {
-            println!("Cache created {}", key);
-            cache.put(key, response.clone()).await;
+          // if let Some(key) = key {
+          //   println!("Cache created {}", key);
+          //   cache.put(key, response.clone()).await;
+          // }
+          if response.status().is_success() {
+            if let Some(key) = key {
+              println!("Cache created {}", key);
+              cache.put(key, response.clone()).await;
+            }
           }
         rsp
       };

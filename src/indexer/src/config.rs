@@ -9,6 +9,11 @@ pub struct Config {
   pub network: BitcoinNetwork,
   pub bitcoin_rpc_url: String,
   pub subscribers: Vec<Principal>,
+  pub index_addresses: Option<bool>,
+  pub index_sats: Option<bool>,
+  pub index_runes: Option<bool>,
+  pub index_inscriptions: Option<bool>,
+  pub index_transactions: Option<bool>,
 }
 
 impl Default for Config {
@@ -17,6 +22,11 @@ impl Default for Config {
       network: BitcoinNetwork::Regtest,
       bitcoin_rpc_url: "".to_string(),
       subscribers: vec![],
+      index_addresses: Some(false),
+      index_sats: Some(false),
+      index_runes: Some(true), 
+      index_inscriptions: Some(true),
+      index_transactions: Some(false),
     }
   }
 }
@@ -51,7 +61,7 @@ pub struct UpgradeArgs {
 }
 
 #[derive(CandidType, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub enum RunesIndexerArgs {
+pub enum InitIndexerArgs {
   Init(Config),
   Upgrade(Option<UpgradeArgs>),
 }

@@ -1,8 +1,8 @@
 {
   "canisters": {
-    "ord-canister-backend": {
-      "candid": "src/ord-canister-backend/ord-canister-backend.did",
-      "package": "ord-canister-backend",
+    "indexer": {
+      "candid": "src/indexer/indexer.did",
+      "package": "indexer",
       "type": "rust"
     }
   },

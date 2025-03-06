@@ -1,0 +1,13 @@
+[package]
+name = "indexer-interface"
+description = "Indexer Interface"
+version = "0.1.0"
+authors = []
+repository = ""
+license = "MIT"
+edition = "2021"
+readme = "README.md"
+
+[dependencies]
+candid = "0.10"
+serde = { version = "1.0", features = ["derive"] }
