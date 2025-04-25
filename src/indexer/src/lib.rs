@@ -12,6 +12,7 @@ mod error;
 mod test;
 mod re;
 mod runes;
+mod into_usize;
 
 use anyhow::Error;
 use bitcoin::{hashes::Hash, OutPoint};

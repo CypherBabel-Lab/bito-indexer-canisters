@@ -7,12 +7,14 @@ use ic_canister_log::log;
 use ic_cdk::api::management_canister::bitcoin::BitcoinNetwork;
 use inscription_updater::InscriptionUpdater;
 use logs::{ERROR, INFO};
-use ordinals::{Height, Sat, SatPoint};
-use crate::{index::{entry::{Entry, SatRange}, event::Events, mem_get_home_inscriptions_len, mem_get_next_sequence_of_sequence_number_to_inscription_entry, mem_get_outpoint_to_utxo_entry, mem_get_statistic_count, mem_increment_statistic, mem_insert_height_to_last_sequence_number, mem_insert_outpoint_to_utxo_entry, mem_insert_script_pubkey_to_outpoints, mem_insert_sequence_number_to_satpoint, mem_insert_statistic_to_count, mem_remove_outpoint_to_utxo_entry, mem_remove_script_pubkey_to_outpoints, utxo_entry::{ParsedUtxoEntry, UtxoEntryBuf}, Statistic}, timestamp, Result};
+use ordinals::{Height, Rune, Sat, SatPoint};
+use rune_updater::RuneUpdater;
+use crate::{index::{entry::{ChangeRecordRune, Entry, SatRange}, event::Events, mem_get_home_inscriptions_len, mem_get_next_sequence_of_sequence_number_to_inscription_entry, mem_get_outpoint_to_utxo_entry, mem_get_statistic_count, mem_increment_statistic, mem_insert_height_to_last_sequence_number, mem_insert_outpoint_to_utxo_entry, mem_insert_script_pubkey_to_outpoints, mem_insert_sequence_number_to_satpoint, mem_insert_statistic_to_count, mem_latest_block, mem_length_outpoint_to_height, mem_length_outpoint_to_rune_balances, mem_length_rune_id_to_rune_entry, mem_length_rune_to_rune_id, mem_length_transaction_id_to_rune, mem_remove_outpoint_to_utxo_entry, mem_remove_script_pubkey_to_outpoints, mem_statistic_reserved_runes, mem_statistic_runes, utxo_entry::{ParsedUtxoEntry, UtxoEntryBuf}, Statistic}, timestamp, Result};
 
 use super::{is_shutting_down, mem_insert_block_header, mem_insert_sat_to_satpoint, next_block, reorg::{self, Reorg}, Index};
 
 mod inscription_updater;
+mod rune_updater;
 
 pub(crate) struct BlockData {
     pub(crate) header: Header,
@@ -73,7 +75,7 @@ pub fn update_index(network: BitcoinNetwork, index: Index, subscribers: Vec<Prin
                       e
                     );
                   } else {
-                    // Reorg::prune_change_record(height);
+                    Reorg::prune_change_record(height);
                     mem_insert_block_header(height, block.header.store());
                     log!(
                       INFO,
@@ -101,7 +103,7 @@ pub fn update_index(network: BitcoinNetwork, index: Index, subscribers: Vec<Prin
                 }
                 Err(e) => match e {
                   reorg::Error::Recoverable { height, depth } => {
-                    Reorg::handle_reorg(network, height, depth);
+                    Reorg::handle_reorg(height, depth, &index);
                   }
                   reorg::Error::Unrecoverable => {
                     log!(
@@ -149,15 +151,70 @@ pub fn update_index(network: BitcoinNetwork, index: Index, subscribers: Vec<Prin
     Ok(())
   }
 
-
   async fn index_block(height: u32, block: &BlockData, index: &Index) -> Result {
     log!(
+      INFO,
+      "Block {} at {} with {} transactions…",
+      height,
+      timestamp(block.header.time.into()),
+      block.txdata.len()
+    );
+    if index.index_inscriptions ||index.index_addresses || index.index_sats {
+      index_utxo_entries(height, block, index).await?;
+    }
+    if index.index_runes && height >= index.first_rune_height() {
+      index_rune(height, block).await?;
+    }
+    Ok(())
+  }
+
+  async fn index_rune(height: u32, block: &BlockData) -> Result {
+    let runes = mem_statistic_runes();
+    let reserved_runes = mem_statistic_reserved_runes();
+  
+    if height % 10 == 0 {
+      log!(
         INFO,
-        "Block {} at {} with {} transactions…",
+        "Index statistics at height {}: latest_block: {:?}, reserved_runes: {}, runes: {}, rune_to_rune_id: {}, rune_entry: {}, transaction_id_to_rune: {}, outpoint_to_rune_balances: {}, outpoint_to_height: {}",
         height,
-        timestamp(block.header.time.into()),
-        block.txdata.len()
+        mem_latest_block(),
+        reserved_runes,
+        runes,
+        mem_length_rune_to_rune_id(),
+        mem_length_rune_id_to_rune_entry(),
+        mem_length_transaction_id_to_rune(),
+        mem_length_outpoint_to_rune_balances(),
+        mem_length_outpoint_to_height(),
       );
+    }
+  
+    // init statistic runes/reserved_runes for new height
+    crate::index::mem_insert_statistic_runes(height, runes);
+    crate::index::mem_insert_statistic_reserved_runes(height, reserved_runes);
+  
+    let mut rune_updater = RuneUpdater {
+      block_time: block.header.time,
+      burned: HashMap::new(),
+      height,
+      minimum: Rune::minimum_at_height(bitcoin::Network::Bitcoin, Height(height)),
+      runes,
+      change_record: ChangeRecordRune::new(),
+      events: Events::new(),
+    };
+  
+    for (i, (tx, txid)) in block.txdata.iter().enumerate() {
+      rune_updater
+        .index_runes(u32::try_from(i).unwrap(), tx, *txid)
+        .await?;
+    }
+  
+    rune_updater.update()?;
+  
+    Ok(())
+  }
+
+
+  async fn index_utxo_entries(height: u32, block: &BlockData, index: &Index) -> Result {
     let mut sat_ranges_written = 0;
     let mut outputs_in_block = 0;
     let index_inscriptions = height >= index.first_inscription_height() && index.index_inscriptions;

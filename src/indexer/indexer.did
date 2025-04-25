@@ -9,6 +9,8 @@ type Config = record {
   subscribers : vec principal;
   index_runes : opt bool;
 };
+type Error = variant { MaxOutpointsExceeded };
+type GetEtchingResult = record { confirmations : nat32; rune_id : text };
 type InitIndexerArgs = variant { Upgrade : opt UpgradeArgs; Init : Config };
 type Inscription = record {
   id : text;
@@ -47,13 +49,47 @@ type InscriptionQuery = variant { Id : text; Sat : text; Number : int32 };
 type Result = variant { Ok : opt InscriptionEntry; Err : text };
 type Result_1 = variant { Ok : opt Inscription; Err : text };
 type Result_2 = variant { Ok : vec text; Err : text };
+type Result_3 = variant { Ok : vec opt vec RuneBalance; Err : Error };
+type RuneBalance = record {
+  confirmations : nat32;
+  divisibility : nat8;
+  amount : nat;
+  rune_id : text;
+  symbol : opt text;
+};
+type RuneEntry = record {
+  confirmations : nat32;
+  mints : nat;
+  terms : opt Terms;
+  etching : text;
+  turbo : bool;
+  premine : nat;
+  divisibility : nat8;
+  spaced_rune : text;
+  number : nat64;
+  timestamp : nat64;
+  block : nat64;
+  burned : nat;
+  rune_id : text;
+  symbol : opt text;
+};
+type Terms = record {
+  cap : opt nat;
+  height : record { opt nat64; opt nat64 };
+  offset : record { opt nat64; opt nat64 };
+  amount : opt nat;
+};
 type UpgradeArgs = record {
   bitcoin_rpc_url : opt text;
   subscribers : opt vec principal;
 };
 service : (InitIndexerArgs) -> {
+  get_etching : (text) -> (opt GetEtchingResult) query;
   get_inscription_entry : (text) -> (Result) query;
   get_inscription_info : (InscriptionQuery, opt nat64) -> (Result_1);
   get_inscriptions_in_block : (nat32) -> (Result_2) query;
   get_latest_block : () -> (nat32, text) query;
+  get_rune : (text) -> (opt RuneEntry) query;
+  get_rune_balances_for_outputs : (vec text) -> (Result_3) query;
+  get_rune_by_id : (text) -> (opt RuneEntry) query;
 }

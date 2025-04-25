@@ -17,4 +17,4 @@ CANISTERS=indexer
 for canister in $(echo $CANISTERS | sed "s/,/ /g")
 do
   generate_did "$canister"
-done
+done 

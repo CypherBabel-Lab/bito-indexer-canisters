@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, collections::HashMap};
 
 use bitcoin::{block::Header, consensus::{self, Decodable, Encodable}, hashes::Hash, OutPoint, Txid};
 use ic_stable_structures::{storable::Bound, Storable};
@@ -654,6 +654,65 @@ impl Entry for Txid {
   fn store(self) -> Self::Value {
     Txid::to_byte_array(self)
   }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuneBalance {
+  pub rune_id: RuneId,
+  pub balance: u128,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuneBalances {
+  pub balances: Vec<RuneBalance>,
+}
+
+impl Storable for RuneBalances {
+  fn to_bytes(&self) -> Cow<[u8]> {
+    let vec = bincode::serialize(self).unwrap();
+    Cow::Owned(vec)
+  }
+
+  fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    bincode::deserialize(&bytes).unwrap()
+  }
+
+  const BOUND: Bound = Bound::Unbounded;
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChangeRecordRune {
+  pub removed_outpoints: Vec<(OutPoint, RuneBalances, u32)>,
+  pub added_outpoints: Vec<OutPoint>,
+  pub burned: HashMap<RuneId, u128>,
+  pub mints: HashMap<RuneId, u128>,
+  pub added_runes: Vec<(Rune, RuneId, Txid)>,
+}
+
+impl ChangeRecordRune {
+  pub fn new() -> Self {
+    Self {
+      removed_outpoints: Vec::new(),
+      added_outpoints: Vec::new(),
+      burned: HashMap::new(),
+      mints: HashMap::new(),
+      added_runes: Vec::new(),
+    }
+  }
+}
+
+impl Storable for ChangeRecordRune {
+  fn to_bytes(&self) -> Cow<[u8]> {
+    let vec = bincode::serialize(self).unwrap();
+    Cow::Owned(vec)
+  }
+
+  fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    bincode::deserialize(&bytes).unwrap()
+  }
+
+  const BOUND: Bound = Bound::Unbounded;
 }
 
 #[cfg(test)]
