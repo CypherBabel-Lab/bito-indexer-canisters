@@ -1,6 +1,6 @@
 # bito-indexer-canisters
 
-An onchain indexer(ord) on the Internet Computer
+An on-chain indexer(ord) on the Internet Computer
 
 ## Deploy
 
@@ -122,7 +122,7 @@ dfx canister call indexer get_inscription_info '(variant { Number = 1 }, null)'
 
 ## Error Handling
 All methods return `Result` variants:
-- `Ok` contains requested data
+- `Ok` contains the requested data
 - `Err` provides error descriptions for:
   - Invalid parameters
   - Disabled index features
@@ -147,6 +147,9 @@ Performance benchmarks:
 - Data freshness < 3 block confirmations
 
 ---
+
+## License
+MIT
 
 [![ICP Certified](https://img.shields.io/badge/DFX-Compatible-success)](https://internetcomputer.org)  
 *Compatible with Internet Computer Protocol standards*
